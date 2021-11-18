@@ -15,8 +15,8 @@ app.post("/account", (request, response) => {
    */
   let { cpf, name } = request.body;
   const id = uuid();
-  
-  cpf = String(cpf)
+
+  cpf = String(cpf);
   const costumersAlreadyExists = costumers.some(
     (costumer) => costumer.cpf === cpf
   );
@@ -33,6 +33,18 @@ app.post("/account", (request, response) => {
   });
 
   response.status(201).json("criado");
+});
+
+app.get("/statement/:cpf", (request, response) => {
+  const { cpf } = request.params;
+
+  const costumer = costumers.find((costumer) => costumer.cpf === cpf);
+
+  if (!costumer) {
+    return response.status(400).json({error: "costumer not found!"})
+  }
+
+  return response.json(costumer.statement);
 });
 
 app.listen(3000, () => {
