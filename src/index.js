@@ -6,6 +6,20 @@ app.use(express.json());
 
 const costumers = [];
 
+function verifyIfExistAccount(request, response, next) {
+  const { cpf } = request.params;
+
+  const costumer = costumers.find((costumer) => costumer.cpf === cpf);
+
+  if (!costumer) {
+    return response.status(400).json({ error: "costumer not found!" });
+  }
+
+  request.costumer = costumer;
+
+  return next();
+}
+
 app.post("/account", (request, response) => {
   /**
    * cpf - string
@@ -32,18 +46,11 @@ app.post("/account", (request, response) => {
     statement: [],
   });
 
-  response.status(201).json("criado");
+  response.status(201).json("created");
 });
 
-app.get("/statement/:cpf", (request, response) => {
-  const { cpf } = request.params;
-
-  const costumer = costumers.find((costumer) => costumer.cpf === cpf);
-
-  if (!costumer) {
-    return response.status(400).json({error: "costumer not found!"})
-  }
-
+app.get("/statement/:cpf", verifyIfExistAccount, (request, response) => {
+  const { costumer } = request
   return response.json(costumer.statement);
 });
 
