@@ -7,7 +7,7 @@ app.use(express.json());
 const costumers = [];
 
 function verifyIfExistAccount(request, response, next) {
-  const { cpf } = request.params;
+  const { cpf } = request.headers;
 
   const costumer = costumers.find((costumer) => costumer.cpf === cpf);
 
@@ -49,9 +49,26 @@ app.post("/account", (request, response) => {
   response.status(201).json("created");
 });
 
-app.get("/statement/:cpf", verifyIfExistAccount, (request, response) => {
-  const { costumer } = request
+app.get("/statement", verifyIfExistAccount, (request, response) => {
+  const { costumer } = request;
   return response.json(costumer.statement);
+});
+
+app.post("/deposit", verifyIfExistAccount, (request, response) => {
+  const { description, amount } = request.body;
+
+  const costumer = request.costumer;
+
+  const statementOperation = {
+    description,
+    amount,
+    create_at: new Date(),
+    type: "credit",
+  };
+
+  costumer.statement.push(statementOperation);
+
+  return response.status(201).json("done")
 });
 
 app.listen(3000, () => {
