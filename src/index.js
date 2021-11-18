@@ -20,6 +20,20 @@ function verifyIfExistAccount(request, response, next) {
   return next();
 }
 
+function getBalance(statement) {
+  const balance = statement.reduce((acc, operation) => {
+    if (operation.type === "credit") {
+      return acc + operation.amount;
+    }
+
+    if (operation.type === "debit") {
+      return acc - operation.amount;
+    }
+  }, 0);
+
+  return balance;
+}
+
 app.post("/account", (request, response) => {
   /**
    * cpf - string
@@ -68,7 +82,43 @@ app.post("/deposit", verifyIfExistAccount, (request, response) => {
 
   costumer.statement.push(statementOperation);
 
-  return response.status(201).json("done")
+  return response.status(201).json("done");
+});
+
+app.post("/withdraw", verifyIfExistAccount, (request, response) => {
+  const { amount } = request.body;
+  const { costumer } = request;
+
+  const balance = getBalance(costumer.statement);
+
+  if (balance < amount) {
+    return response
+      .status(400)
+      .json({ error: "operation not possible", msg: `Insufficient founds!` });
+  }
+
+  const statementOperation = {
+    amount,
+    create_at: new Date(),
+    type: "debit",
+  };
+
+  costumer.statement.push(statementOperation);
+  response.status(201).json("done");
+});
+
+app.get("/statement/date", verifyIfExistAccount, (request, response) => {
+  const { costumer } = request;
+  const { date } = request.query;
+
+  const dateFormat = new Date(date + "00:00");
+
+  const statement = costumer.statement.filter((statement) => {
+    return (
+      statement.create_at.toDateString() >= new Date(dateFormat).toDateString()
+    );
+  });
+  return response.json(statement)
 });
 
 app.listen(3000, () => {
