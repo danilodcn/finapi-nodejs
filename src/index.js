@@ -34,6 +34,10 @@ function getBalance(statement) {
   return balance;
 }
 
+app.get("/", (request, response) => {
+  response.json("ola mundo!!")
+})
+
 app.post("/account", (request, response) => {
   /**
    * cpf - string
